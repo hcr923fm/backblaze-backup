@@ -67,7 +67,7 @@ def do_upload_file(file_abs_location, b2_bucket_id):
 
     with open(file_abs_location, 'rb') as f:
         print "Uploading", file_abs_location
-        file_data = f.read().encode('utf-8')
+        file_data = f.read()
         sha1_of_file_data = hashlib.sha1(file_data).hexdigest()
         headers['X-Bz-Content-Sha1'] = sha1_of_file_data
 
@@ -82,6 +82,7 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         resp = urllib2.urlopen(request)
         resp_data = json.loads(urllib2.unquote(str(resp.read())).decode('utf-8'))
     except urllib2.HTTPError, e:
+        print e
         print e.reason
         #print resp_data
     except Exception, e:
