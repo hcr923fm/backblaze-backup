@@ -53,7 +53,7 @@ def get_b2_upload_url(bucket_id):
 
 def do_upload_file(file_abs_location, b2_bucket_id):
     if not b2_opts['b2_auth_token']:
-        b2_opts['b2_auth_token'], b2_opts['b2_api_url'], b2_opts['b2_download_url'], b2_opts['b2_min_part_size]'= getAccountAuth(
+        b2_opts['b2_auth_token'], b2_opts['b2_api_url'], b2_opts['b2_download_url'], b2_opts['b2_min_part_size']= getAccountAuth(
             b2_opts['b2_hex_account_id'], b2_opts['b2_app_key'])
 
     headers= {
