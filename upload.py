@@ -65,7 +65,7 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         'Content-Type': 'b2/x-auto',
     }
 
-    with open(file_abs_location, 'r') as f:
+    with open(file_abs_location, 'rb') as f:
         print "Uploading", file_abs_location
         file_data = f.read()
         sha1_of_file_data = hashlib.sha1(file_data).hexdigest()
