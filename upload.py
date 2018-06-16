@@ -37,7 +37,7 @@ def getAccountAuth(hex_acc_id, app_key):
 
 
 def get_b2_upload_url(bucket_id):
-    if not b2_opts['b2_api_url'] or not b2['b2_auth_token']:
+    if not b2_opts['b2_api_url'] or not b2_opts['b2_auth_token']:
         b2_opts['b2_auth_token'], b2_opts['b2_api_url'], b2_opts['b2_download_url'], b2_opts['b2_min_part_size'] = getAccountAuth(
             b2_opts['b2_hex_account_id'], b2_opts['b2_app_key'])
 
