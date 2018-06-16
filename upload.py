@@ -82,7 +82,11 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         resp = urllib2.urlopen(request)
         resp_data = json.loads(resp.read())
     except urllib2.HTTPError, e:
-        print e
+        print e.reason
+        print resp_data
+    except Exception, e:
+        print e,
+        print resp_data
 
 
 def generate_file_list(base_directory):
