@@ -66,13 +66,15 @@ def do_upload_file(file_abs_location, b2_bucket_id):
     }
 
     with open(file_abs_location, 'r') as f:
+        print "Uploading", file_abs_location
         file_data = f.read()
         sha1_of_file_data = hashlib.sha1(file_data).hexdigest()
         headers['X-Bz-Content-Sha1'] = sha1_of_file_data
 
         if not b2_opts['b2_upload_url'] or not b2_opts['b2_upload_auth_token']:
-            retd_bucket_id, b2_opts['b2_upload_auth_token'],  b2_opts['b2_upload_url'] = get_b2_upload_url(
-                b2_bucket_id)
+            b2_upload_url_data = get_b2_upload_url(b2_bucket_id)
+            b2_opts['b2_upload_auth_token'] = b2_upload_url_data['authorizationToken']
+            b2_opts['b2_upload_url'] = b2_upload_url_data['uploadUrl']
 
         request = urllib2.Request(b2_opts['b2_upload_url'], file_data, headers)
 
@@ -93,6 +95,7 @@ def generate_file_list(base_directory):
                 directories_to_traverse.append(entry)
             elif os.path.isfile(entry):
                 file_list.append(entry)
+                print "Found dir:", entry
 
     return file_list
 
