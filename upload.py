@@ -78,13 +78,12 @@ def do_upload_file(file_abs_location, b2_bucket_id):
 
         request = urllib2.Request(b2_opts['b2_upload_url'], file_data, headers)
 
+    with resp
     try:
         resp = urllib2.urlopen(request)
         resp_data = json.loads(resp.read())
     except urllib2.HTTPError, e:
         print e
-    finally:
-        resp.close()
 
 
 def generate_file_list(base_directory):
