@@ -31,7 +31,7 @@ def getAccountAuth(hex_acc_id, app_key):
     )
 
     response = urllib2.urlopen(request)
-    response_data = json.loads(response)
+    response_data = json.loads(response.read())
     response.close()
     return response_data
 
@@ -58,7 +58,7 @@ def do_upload_file(file_abs_location, b2_bucket_id):
 
     headers = {
         'Authorization': b2_opts['b2_auth_token'],
-        'X-Bz-File-Name': urllib2.quote(os.path.relpath(file_abs_location, local_base_directory).encode('utf-8')),
+        'X-Bz-File-Name': urllib2.quote(os.path.relpath(file_abs_location, b2_opts['local_base_directory']).encode('utf-8')),
         'Content-Type': 'b2/x-auto',
     }
 
