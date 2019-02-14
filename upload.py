@@ -85,7 +85,7 @@ def get_sha1_of_existing_file(file_path):
         }
 
         request = urllib2.Request(
-            b2_opts["b2_base_url"] + "/b2api/v2/b2_get_file_info",
+            b2_opts["b2_api_url"] + "/b2api/v2/b2_get_file_info",
             json.dumps({'fileId': file_info["id"]}),
             headers)
 
