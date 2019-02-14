@@ -22,8 +22,10 @@ b2_opts = {
 
 
 def getAccountAuth(hex_acc_id, app_key):
-    basic_auth_string = 'Basic ' + base64.b64encode(hex_acc_id + ':' + app_key)
-    headers = {'Authorization': basic_auth_string}
+    id_and_key = "{0}:{1}".format(b2_opts['b2_hex_account_id'], b2_opts['b2_app_key'])
+    basic_auth_string = 'Basic ' + base64.b64encode(id_and_key)
+    headers = { 'Authorization': basic_auth_string }
+
 
     request = urllib2.Request(
         b2_opts['b2_api_base_url'] + 'b2_authorize_account',
@@ -53,39 +55,44 @@ def get_b2_upload_url(bucket_id):
 
 def do_upload_file(file_abs_location, b2_bucket_id):
     if not b2_opts['b2_auth_token']:
-        account_auth_data = getAccountAuth(b2_opts['b2_hex_account_id'], b2_opts['b2_app_key'])
+        account_auth_data = getAccountAuth(
+            b2_opts['b2_hex_account_id'], b2_opts['b2_app_key'])
         b2_opts['b2_auth_token'] = account_auth_data['authorizationToken']
         b2_opts['b2_api_url'] = account_auth_data['apiUrl']
         b2_opts['b2_download_url'] = account_auth_data['downloadUrl']
         b2_opts['b2_min_part_size'] = account_auth_data['recommendedPartSize']
 
+    if not b2_opts['b2_upload_url'] or not b2_opts['b2_upload_auth_token']:
+        b2_upload_url_data = get_b2_upload_url(b2_bucket_id)
+        b2_opts['b2_upload_auth_token'] = b2_upload_url_data['authorizationToken']
+        b2_opts['b2_upload_url'] = b2_upload_url_data['uploadUrl'].encode('ascii')
+
     headers = {
-        'Authorization': b2_opts['b2_auth_token'],
-        'X-Bz-File-Name': urllib2.quote(os.path.relpath(file_abs_location, b2_opts['local_base_directory']).encode('utf-8')),
+        'Authorization': b2_opts['b2_upload_auth_token'].encode('ascii'),
+        'X-Bz-File-Name': urllib2.quote(os.path.relpath(file_abs_location, b2_opts['local_base_directory'])),
         'Content-Type': 'b2/x-auto',
     }
 
-    with open(file_abs_location, 'rb') as f:
+    print "Upload url:", b2_opts['b2_upload_url'], type(b2_opts['b2_upload_url'])
+    print headers
+
+    with open(file_abs_location, 'r') as f:
         print "Uploading", file_abs_location
-        file_data = bytes(f.read())
-        sha1_of_file_data = hashlib.sha1(file_data).hexdigest()
+        file_data = f.read().decode('latin1', 'replace')
+        sha1_base = hashlib.sha1(file_data)
+        sha1_of_file_data = sha1_base.hexdigest()
         headers['X-Bz-Content-Sha1'] = sha1_of_file_data
 
-        if not b2_opts['b2_upload_url'] or not b2_opts['b2_upload_auth_token']:
-            b2_upload_url_data = get_b2_upload_url(b2_bucket_id)
-            b2_opts['b2_upload_auth_token'] = b2_upload_url_data['authorizationToken']
-            b2_opts['b2_upload_url'] = b2_upload_url_data['uploadUrl']
-
-        request = urllib2.Request(b2_opts['b2_upload_url'], file_data, headers)
+        request = urllib2.Request(b2_opts['b2_upload_url'], file_data.encode('utf-8'), headers)
 
     try:
         resp = urllib2.urlopen(request)
-        resp_data = json.loads(urllib2.unquote(str(resp.read())).decode('utf-8'))
+        resp_data = json.loads(urllib2.unquote(
+            str(resp.read())).decode('utf-8'))
     except urllib2.HTTPError, e:
         print e
         print e.reason
         #print resp_data
-
 
 def generate_file_list(base_directory):
     directories_to_traverse = [base_directory]
@@ -106,4 +113,6 @@ def generate_file_list(base_directory):
 
 file_list = generate_file_list(b2_opts['local_base_directory'])
 while file_list:
-    do_upload_file(file_list.pop(), b2_opts['b2_bucket_id'])
+    file_name = file_list.pop()
+    print "File name", file_name, type(file_name)
+    do_upload_file(file_name, b2_opts['b2_bucket_id'])
