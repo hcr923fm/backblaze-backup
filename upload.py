@@ -127,8 +127,8 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         resp = urllib2.urlopen(request)
         resp_data = json.loads(urllib2.unquote(
             str(resp.read())).decode('utf-8'))
-        cursor.execute("""INSERT INTO files VALUES ({0}, {1})""".format(
-            file_abs_location, resp_data["contentSha1"]))
+        cursor.execute("""INSERT INTO files VALUES (?, ?)""",
+                       file_abs_location, resp_data["contentSha1"])
     except urllib2.HTTPError, e:
         print e
         print e.reason
