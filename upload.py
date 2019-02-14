@@ -5,6 +5,7 @@ import hashlib
 import os
 import os.path
 import sys
+import codecs
 
 b2_opts = {
     'b2_key_id': sys.argv[1],
@@ -76,14 +77,24 @@ def do_upload_file(file_abs_location, b2_bucket_id):
     print "Upload url:", b2_opts['b2_upload_url'], type(b2_opts['b2_upload_url'])
     print headers
 
-    with open(file_abs_location, 'r') as f:
-        print "Uploading", file_abs_location
-        file_data = unicode(f.read().encode('utf-8'))
-        sha1_base = hashlib.sha1(file_data)
-        sha1_of_file_data = sha1_base.hexdigest()
+    print "Uploading", file_abs_location
+#        sha1_base = hashlib.sha1(file_data)
+#        sha1_of_file_data = sha1_base.hexdigest()
+    sha1sum = hashlib.sha1()
+    with open(file_abs_location, 'rb') as source:
+	block = source.read(2**16)
+	while len(block) != 0:
+            sha1sum.update(block)
+            block = source.read(2**16)
+
+    sha1_of_file_data = sha1sum.hexdigest()
+
+    with open(file_abs_location) as f:
+        file_data = f.read()
+
         headers['X-Bz-Content-Sha1'] = sha1_of_file_data
 
-        request = urllib2.Request(b2_opts['b2_upload_url'], file_data.encode('utf-8'), headers)
+        request = urllib2.Request(b2_opts['b2_upload_url'], file_data, headers)
 
     try:
         resp = urllib2.urlopen(request)
@@ -106,7 +117,7 @@ def generate_file_list(base_directory):
                 directories_to_traverse.append(entry)
             elif os.path.isfile(entry):
                 file_list.append(entry)
-                print "Found file:", entry
+#                print "Found file:", entry
 
     return file_list
 
