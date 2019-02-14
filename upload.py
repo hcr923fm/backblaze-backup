@@ -134,7 +134,8 @@ def do_upload_file(file_abs_location, b2_bucket_id):
     if sha1_of_file_data == existing_sha1
         print "Skipping, SHA1 not changed"
         return
-    print "SHA1 mismatch, continuing upload (archived: {0}, computed: {1})".format(existing_sha1, sha1_of_file_data)
+    print "SHA1 mismatch, continuing upload (archived: {0}, computed: {1})".format(
+        existing_sha1, sha1_of_file_data)
 
     # We'll commit this later, when the file has been confirmed uploaded
     cursor.execute("""DELETE FROM files WHERE path=?""", [file_abs_location])
@@ -172,7 +173,7 @@ def generate_file_list(base_directory):
             entry = os.path.join(current_dir, dir_contents.pop())
             if os.path.isdir(entry):
                 directories_to_traverse.append(entry)
-            elif os.path.isfile(entry):
+            elif os.path.isfile(entry) and not entry.count(".mdb"):
                 file_list.append(entry)
 #                print "Found file:", entry
 
