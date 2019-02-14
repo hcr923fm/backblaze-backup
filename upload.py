@@ -6,6 +6,11 @@ import os
 import os.path
 import sys
 import codecs
+import sqlite3
+
+db_conn = sqlite3.connect("bb_bkp.db")
+cursor = db_conn.cursor()
+cursor.execute("""CREATE TABLE files (path text, id text)""")
 
 b2_opts = {
     'b2_key_id': sys.argv[1],
@@ -25,8 +30,7 @@ b2_opts = {
 def getAccountAuth(hex_acc_id, app_key):
     id_and_key = "{0}:{1}".format(b2_opts['b2_key_id'], b2_opts['b2_app_key'])
     basic_auth_string = 'Basic ' + base64.b64encode(id_and_key)
-    headers = { 'Authorization': basic_auth_string }
-
+    headers = {'Authorization': basic_auth_string}
 
     request = urllib2.Request(
         b2_opts['b2_api_base_url'] + 'b2_authorize_account',
@@ -37,6 +41,13 @@ def getAccountAuth(hex_acc_id, app_key):
     response_data = json.loads(response.read())
     response.close()
     return response_data
+
+
+def setAccountAuth(account_auth_data):
+    b2_opts['b2_auth_token'] = account_auth_data['authorizationToken']
+    b2_opts['b2_api_url'] = account_auth_data['apiUrl']
+    b2_opts['b2_download_url'] = account_auth_data['downloadUrl']
+    b2_opts['b2_min_part_size'] = account_auth_data['recommendedPartSize']
 
 
 def get_b2_upload_url(bucket_id):
@@ -54,19 +65,35 @@ def get_b2_upload_url(bucket_id):
     return data
 
 
+def get_sha1_of_existing_file(file_path):
+    if not b2_opts['b2_auth_token']:
+        account_auth_data = getAccountAuth(
+            b2_opts['b2_key_id'], b2_opts['b2_app_key'])
+        setAccountAuth(account_auth_data)
+
+    cursor.execute("""SELECT * FROM files WHERE PATH=?""", file_path)
+    file_info = cursor.fetchone()
+    if (file_info){
+        headers = {
+            'Authorization': b2_opts['b2_upload_auth_token'].encode('ascii')
+        }
+        print file_info
+    } else {
+        return null
+    }
+
+
 def do_upload_file(file_abs_location, b2_bucket_id):
     if not b2_opts['b2_auth_token']:
         account_auth_data = getAccountAuth(
             b2_opts['b2_key_id'], b2_opts['b2_app_key'])
-        b2_opts['b2_auth_token'] = account_auth_data['authorizationToken']
-        b2_opts['b2_api_url'] = account_auth_data['apiUrl']
-        b2_opts['b2_download_url'] = account_auth_data['downloadUrl']
-        b2_opts['b2_min_part_size'] = account_auth_data['recommendedPartSize']
+        setAccountAuth(account_auth_data)
 
     if not b2_opts['b2_upload_url'] or not b2_opts['b2_upload_auth_token']:
         b2_upload_url_data = get_b2_upload_url(b2_bucket_id)
         b2_opts['b2_upload_auth_token'] = b2_upload_url_data['authorizationToken']
-        b2_opts['b2_upload_url'] = b2_upload_url_data['uploadUrl'].encode('ascii')
+        b2_opts['b2_upload_url'] = b2_upload_url_data['uploadUrl'].encode(
+            'ascii')
 
     headers = {
         'Authorization': b2_opts['b2_upload_auth_token'].encode('ascii'),
@@ -74,7 +101,8 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         'Content-Type': 'b2/x-auto',
     }
 
-    print "Upload url:", b2_opts['b2_upload_url'], type(b2_opts['b2_upload_url'])
+    print "Upload url:", b2_opts['b2_upload_url'], type(
+        b2_opts['b2_upload_url'])
     print headers
 
     print "Uploading", file_abs_location
@@ -82,8 +110,8 @@ def do_upload_file(file_abs_location, b2_bucket_id):
 #        sha1_of_file_data = sha1_base.hexdigest()
     sha1sum = hashlib.sha1()
     with open(file_abs_location, 'rb') as source:
-	block = source.read(2**16)
-	while len(block) != 0:
+        block = source.read(2**16)
+        while len(block) != 0:
             sha1sum.update(block)
             block = source.read(2**16)
 
@@ -100,10 +128,13 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         resp = urllib2.urlopen(request)
         resp_data = json.loads(urllib2.unquote(
             str(resp.read())).decode('utf-8'))
+        cursor.execute("""INSERT INTO files VALUES ({0}, {1})""".format(
+            file_abs_location, resp_data["contentSha1"]))
     except urllib2.HTTPError, e:
         print e
         print e.reason
         #print resp_data
+
 
 def generate_file_list(base_directory):
     directories_to_traverse = [base_directory]
@@ -121,9 +152,10 @@ def generate_file_list(base_directory):
 
     return file_list
 
-print "Key ID:",b2_opts['b2_key_id']
-print "App key:",b2_opts['b2_app_key']
-print "Bucket ID:",b2_opts['b2_bucket_id']
+
+print "Key ID:", b2_opts['b2_key_id']
+print "App key:", b2_opts['b2_app_key']
+print "Bucket ID:", b2_opts['b2_bucket_id']
 
 print getAccountAuth(b2_opts['b2_key_id'], b2_opts['b2_app_key'])
 
