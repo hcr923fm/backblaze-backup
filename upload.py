@@ -77,6 +77,7 @@ def get_sha1_of_existing_file(file_path):
     cursor.execute("""SELECT * FROM files WHERE path=?""", file_path)
     file_info = cursor.fetchone()
     if file_info:
+        print "File info:"
         print file_info
         headers = {
             'Authorization': b2_opts['b2_upload_auth_token'].encode('ascii')
@@ -133,6 +134,8 @@ def do_upload_file(file_abs_location, b2_bucket_id):
     if sha1_of_file_data == get_sha1_of_existing_file(file_abs_location):
         print "Skipping, SHA1 not changed"
         return
+
+    # If not skipping, delete existing DB entry for that file or update the SHA1
 
     with open(file_abs_location) as f:
         file_data = f.read()
