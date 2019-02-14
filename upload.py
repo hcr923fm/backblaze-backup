@@ -81,7 +81,7 @@ def get_sha1_of_existing_file(file_path):
         print "File info:"
         print file_info
         headers = {
-            'Authorization': b2_opts['b2_upload_auth_token'].encode('ascii')
+            'Authorization': b2_opts['b2_auth_token'].encode('ascii')
         }
 
         request = urllib2.Request(
