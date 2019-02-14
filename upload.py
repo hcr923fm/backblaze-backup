@@ -75,7 +75,7 @@ def get_sha1_of_existing_file(file_path):
         setAccountAuth(account_auth_data)
 
     #print "Search in DB for", file_path
-    cursor.execute("""SELECT * FROM files WHERE path=?""", (file_path))
+    cursor.execute("""SELECT * FROM files WHERE path=?""", [file_path])
     file_info = cursor.fetchone()
     if file_info:
         print "File info:"
