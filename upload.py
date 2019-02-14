@@ -86,7 +86,7 @@ def get_sha1_of_existing_file(file_path):
 
         request = urllib2.Request(
             b2_opts["b2_api_url"] + "/b2api/v2/b2_get_file_info",
-            json.dumps({ 'fileId' : file_info[1] }),
+            json.dumps({'fileId': file_info[1]}),
             headers)
 
         resp = urllib2.urlopen(request)
@@ -117,9 +117,9 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         'Content-Type': 'b2/x-auto',
     }
 
-    print "Upload url:", b2_opts['b2_upload_url'], type(
-        b2_opts['b2_upload_url'])
-    print headers
+    # print "Upload url:", b2_opts['b2_upload_url'], type(
+    #     b2_opts['b2_upload_url'])
+    # print headers
 
     print "Uploading", file_abs_location
 #        sha1_base = hashlib.sha1(file_data)
@@ -174,12 +174,6 @@ def generate_file_list(base_directory):
 
     return file_list
 
-
-print "Key ID:", b2_opts['b2_key_id']
-print "App key:", b2_opts['b2_app_key']
-print "Bucket ID:", b2_opts['b2_bucket_id']
-
-print getAccountAuth(b2_opts['b2_key_id'], b2_opts['b2_app_key'])
 
 file_list = generate_file_list(b2_opts['local_base_directory'])
 while file_list:
