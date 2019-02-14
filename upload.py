@@ -36,7 +36,7 @@ def getAccountAuth(hex_acc_id, app_key):
     headers = {'Authorization': basic_auth_string}
 
     request = urllib2.Request(
-        b2_opts['b2_api_base_url'] + 'b2_authorize_account',
+        'https://api.backblazeb2.com/b2api/v2/b2_authorize_account',
         headers=headers
     )
 
