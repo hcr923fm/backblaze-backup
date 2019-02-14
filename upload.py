@@ -133,8 +133,10 @@ def do_upload_file(file_abs_location, b2_bucket_id):
     if sha1_of_file_data == get_sha1_of_existing_file(file_abs_location):
         print "Skipping, SHA1 not changed"
         return
+    print "SHA1 mismatch, continuing upload"
 
-    # If not skipping, delete existing DB entry for that file or update the SHA1
+    # We'll commit this later, when the file has been confirmed uploaded
+    cursor.execute("""DELETE FROM files WHERE path=?""", [file_abs_location])
 
     with open(file_abs_location) as f:
         file_data = f.read()
@@ -147,12 +149,15 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         resp = urllib2.urlopen(request)
         resp_data = json.loads(urllib2.unquote(
             str(resp.read())).decode('utf-8'))
+        # We'll commit this later, when the file has been confirmed uploaded
         cursor.execute("""INSERT INTO files VALUES (?, ?)""",
                        (file_abs_location, resp_data["fileId"]))
         db_conn.commit()
     except urllib2.HTTPError, e:
         print e
         print e.reason
+        # Don't update the new file in the DB
+        db_conn.rollback()
         # print resp_data
 
 
