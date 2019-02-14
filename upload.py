@@ -20,7 +20,7 @@ b2_opts = {
     'b2_app_key': sys.argv[2],
     'local_base_directory': sys.argv[3],
     'b2_bucket_id': sys.argv[4],
-    'b2_api_base_url': 'https://api.backblazeb2.com/b2api/v2/',
+    'b2_api_base_url': 'https://api.backblazeb2.com/b2api/v2',
     'b2_auth_token': None,
     'b2_upload_auth_token': None,
     'b2_api_url': None,
@@ -58,7 +58,7 @@ def get_b2_upload_url(bucket_id):
         b2_opts['b2_auth_token'], b2_opts['b2_api_url'], b2_opts['b2_download_url'], b2_opts['b2_min_part_size'] = getAccountAuth(
             b2_opts['b2_key_id'], b2_opts['b2_app_key'])
 
-    req = urllib2.Request('%s/b2_get_upload_url' % b2_opts['b2_api_base_url'],
+    req = urllib2.Request(b2_opts['b2_api_url']+'/b2api/v2/b2_get_upload_url',
                           json.dumps({'bucketId': bucket_id}),
                           headers={'Authorization': b2_opts['b2_auth_token']})
 
@@ -84,7 +84,7 @@ def get_sha1_of_existing_file(file_path):
         }
 
         request = urllib2.Request(
-            b2_opts["b2_api_base_url"] + "/b2_get_file_info",
+            b2_opts["b2_base_url"] + "/b2api/v2/b2_get_file_info",
             json.dumps({'fileId': file_info["id"]}),
             headers)
 
