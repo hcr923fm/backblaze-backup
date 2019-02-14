@@ -121,7 +121,7 @@ def do_upload_file(file_abs_location, b2_bucket_id):
     #     b2_opts['b2_upload_url'])
     # print headers
 
-    print "Uploading", file_abs_location
+    print "--> Uploading", file_abs_location
 #        sha1_base = hashlib.sha1(file_data)
 #        sha1_of_file_data = sha1_base.hexdigest()
     sha1sum = hashlib.sha1()
@@ -178,5 +178,4 @@ def generate_file_list(base_directory):
 file_list = generate_file_list(b2_opts['local_base_directory'])
 while file_list:
     file_name = file_list.pop()
-    print "File name", file_name
     do_upload_file(file_name, b2_opts['b2_bucket_id'])
