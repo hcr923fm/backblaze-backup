@@ -110,8 +110,11 @@ def generate_file_list(base_directory):
 
     return file_list
 
+print "Hex account ID:",b2_opts['b2_hex_account_id']
+print "App key:",b2_opts['b2_app_key']
+print "Bucket ID:",b2_opts['b2_bucket_id']
 
-b2_opts['b2_auth_token'] = getAccountAuth(b2_opts['b2_hex_account_id'], b2_opts['b2_app_key'])
+print getAccountAuth(b2_opts['b2_hex_account_id'], b2_opts['b2_app_key'])
 
 file_list = generate_file_list(b2_opts['local_base_directory'])
 while file_list:
