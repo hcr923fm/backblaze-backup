@@ -10,7 +10,10 @@ import sqlite3
 
 db_conn = sqlite3.connect("bb_bkp.db")
 cursor = db_conn.cursor()
-cursor.execute("""CREATE TABLE files (path text, id text)""")
+try:
+    cursor.execute("""CREATE TABLE files (path text, id text)""")
+except sqlite3.OperationalError:
+    print "Table already exists"
 
 b2_opts = {
     'b2_key_id': sys.argv[1],
