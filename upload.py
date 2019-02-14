@@ -111,8 +111,10 @@ def generate_file_list(base_directory):
     return file_list
 
 
+b2_opts['b2_auth_token'] = getAccountAuth(b2_opts['b2_hex_account_id'], b2_opts['b2_app_key'])
+
 file_list = generate_file_list(b2_opts['local_base_directory'])
 while file_list:
     file_name = file_list.pop()
-    print "File name", file_name, type(file_name)
+    print "File name", file_name
     do_upload_file(file_name, b2_opts['b2_bucket_id'])
