@@ -58,7 +58,7 @@ def get_b2_upload_url(bucket_id):
         b2_opts['b2_auth_token'], b2_opts['b2_api_url'], b2_opts['b2_download_url'], b2_opts['b2_min_part_size'] = getAccountAuth(
             b2_opts['b2_key_id'], b2_opts['b2_app_key'])
 
-    req = urllib2.Request('%s/b2api/v1/b2_get_upload_url' % b2_opts['b2_api_url'],
+    req = urllib2.Request('%s/b2_get_upload_url' % b2_opts['b2_api_base_url'],
                           json.dumps({'bucketId': bucket_id}),
                           headers={'Authorization': b2_opts['b2_auth_token']})
 
@@ -74,14 +74,26 @@ def get_sha1_of_existing_file(file_path):
             b2_opts['b2_key_id'], b2_opts['b2_app_key'])
         setAccountAuth(account_auth_data)
 
-    cursor.execute("""SELECT * FROM files WHERE PATH=?""", file_path)
+    cursor.execute("""SELECT * FROM files WHERE path=?""", file_path)
     file_info = cursor.fetchone()
-    if (file_info):
+    if file_info:
+        print file_info
         headers = {
             'Authorization': b2_opts['b2_upload_auth_token'].encode('ascii')
         }
-        print file_info
+
+        request = urllib2.Request(
+            b2_opts["b2_api_base_url"] + "/b2_get_file_info",
+            json.dumps({'fileId': file_info["id"]}),
+            headers)
+
+        resp = urllib2.urlopen(request)
+        resp_data = json.loads(resp.read())
+        resp.close()
+        return resp_data["contentSha1"]
+
     else:
+        print "Couldn't find DB entry for", file_path
         return None
 
 
@@ -118,6 +130,9 @@ def do_upload_file(file_abs_location, b2_bucket_id):
             block = source.read(2**16)
 
     sha1_of_file_data = sha1sum.hexdigest()
+    if sha1_of_file_data == get_sha1_of_existing_file(file_abs_location):
+        print "Skipping, SHA1 not changed"
+        return
 
     with open(file_abs_location) as f:
         file_data = f.read()
@@ -131,12 +146,12 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         resp_data = json.loads(urllib2.unquote(
             str(resp.read())).decode('utf-8'))
         cursor.execute("""INSERT INTO files VALUES (?, ?)""",
-                       (file_abs_location, resp_data["contentSha1"]))
+                       (file_abs_location, resp_data["fileId"]))
         db_conn.commit()
     except urllib2.HTTPError, e:
         print e
         print e.reason
-        #print resp_data
+        # print resp_data
 
 
 def generate_file_list(base_directory):
