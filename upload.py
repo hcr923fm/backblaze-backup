@@ -78,8 +78,6 @@ def get_sha1_of_existing_file(file_path):
     cursor.execute("""SELECT * FROM files WHERE path=?""", [file_path])
     file_info = cursor.fetchone()
     if file_info:
-        print "File info:"
-        print file_info
         headers = {
             'Authorization': b2_opts['b2_auth_token'].encode('ascii')
         }
