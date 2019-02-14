@@ -78,7 +78,7 @@ def do_upload_file(file_abs_location, b2_bucket_id):
 
     with open(file_abs_location, 'r') as f:
         print "Uploading", file_abs_location
-        file_data = f.read().decode('latin1', 'replace')
+        file_data = unicode(f.read().encode('utf-8'))
         sha1_base = hashlib.sha1(file_data)
         sha1_of_file_data = sha1_base.hexdigest()
         headers['X-Bz-Content-Sha1'] = sha1_of_file_data
