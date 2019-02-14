@@ -11,7 +11,7 @@ b2_opts = {
     'b2_app_key': sys.argv[2],
     'local_base_directory': sys.argv[3],
     'b2_bucket_id': sys.argv[4],
-    'b2_api_base_url': 'https://api.backblazeb2.com/b2api/v1/',
+    'b2_api_base_url': 'https://api.backblazeb2.com/b2api/v2/',
     'b2_auth_token': None,
     'b2_upload_auth_token': None,
     'b2_api_url': None,
