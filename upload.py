@@ -73,14 +73,13 @@ def get_sha1_of_existing_file(file_path):
 
     cursor.execute("""SELECT * FROM files WHERE PATH=?""", file_path)
     file_info = cursor.fetchone()
-    if (file_info){
+    if (file_info):
         headers = {
             'Authorization': b2_opts['b2_upload_auth_token'].encode('ascii')
         }
         print file_info
-    } else {
-        return null
-    }
+    else:
+        return None
 
 
 def do_upload_file(file_abs_location, b2_bucket_id):
