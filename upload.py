@@ -130,10 +130,11 @@ def do_upload_file(file_abs_location, b2_bucket_id):
             block = source.read(2**16)
 
     sha1_of_file_data = sha1sum.hexdigest()
-    if sha1_of_file_data == get_sha1_of_existing_file(file_abs_location):
+    existing_sha1 = get_sha1_of_existing_file(file_abs_location):
+    if sha1_of_file_data == existing_sha1
         print "Skipping, SHA1 not changed"
         return
-    print "SHA1 mismatch, continuing upload"
+    print "SHA1 mismatch, continuing upload (archived: {0}, computed: {1})".format(existing_sha1, sha1_of_file_data)
 
     # We'll commit this later, when the file has been confirmed uploaded
     cursor.execute("""DELETE FROM files WHERE path=?""", [file_abs_location])
