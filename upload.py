@@ -7,7 +7,7 @@ import os.path
 import sys
 
 b2_opts = {
-    'b2_hex_account_id': sys.argv[1],
+    'b2_key_id': sys.argv[1],
     'b2_app_key': sys.argv[2],
     'local_base_directory': sys.argv[3],
     'b2_bucket_id': sys.argv[4],
@@ -22,7 +22,7 @@ b2_opts = {
 
 
 def getAccountAuth(hex_acc_id, app_key):
-    id_and_key = "{0}:{1}".format(b2_opts['b2_hex_account_id'], b2_opts['b2_app_key'])
+    id_and_key = "{0}:{1}".format(b2_opts['b2_key_id'], b2_opts['b2_app_key'])
     basic_auth_string = 'Basic ' + base64.b64encode(id_and_key)
     headers = { 'Authorization': basic_auth_string }
 
@@ -41,7 +41,7 @@ def getAccountAuth(hex_acc_id, app_key):
 def get_b2_upload_url(bucket_id):
     if not b2_opts['b2_api_url'] or not b2_opts['b2_auth_token']:
         b2_opts['b2_auth_token'], b2_opts['b2_api_url'], b2_opts['b2_download_url'], b2_opts['b2_min_part_size'] = getAccountAuth(
-            b2_opts['b2_hex_account_id'], b2_opts['b2_app_key'])
+            b2_opts['b2_key_id'], b2_opts['b2_app_key'])
 
     req = urllib2.Request('%s/b2api/v1/b2_get_upload_url' % b2_opts['b2_api_url'],
                           json.dumps({'bucketId': bucket_id}),
@@ -56,7 +56,7 @@ def get_b2_upload_url(bucket_id):
 def do_upload_file(file_abs_location, b2_bucket_id):
     if not b2_opts['b2_auth_token']:
         account_auth_data = getAccountAuth(
-            b2_opts['b2_hex_account_id'], b2_opts['b2_app_key'])
+            b2_opts['b2_key_id'], b2_opts['b2_app_key'])
         b2_opts['b2_auth_token'] = account_auth_data['authorizationToken']
         b2_opts['b2_api_url'] = account_auth_data['apiUrl']
         b2_opts['b2_download_url'] = account_auth_data['downloadUrl']
@@ -110,11 +110,11 @@ def generate_file_list(base_directory):
 
     return file_list
 
-print "Hex account ID:",b2_opts['b2_hex_account_id']
+print "Key ID:",b2_opts['b2_key_id']
 print "App key:",b2_opts['b2_app_key']
 print "Bucket ID:",b2_opts['b2_bucket_id']
 
-print getAccountAuth(b2_opts['b2_hex_account_id'], b2_opts['b2_app_key'])
+print getAccountAuth(b2_opts['b2_key_id'], b2_opts['b2_app_key'])
 
 file_list = generate_file_list(b2_opts['local_base_directory'])
 while file_list:
