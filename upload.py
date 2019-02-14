@@ -130,7 +130,7 @@ def do_upload_file(file_abs_location, b2_bucket_id):
             block = source.read(2**16)
 
     sha1_of_file_data = sha1sum.hexdigest()
-    existing_sha1 = get_sha1_of_existing_file(file_abs_location):
+    existing_sha1 = get_sha1_of_existing_file(file_abs_location)
     if sha1_of_file_data == existing_sha1
         print "Skipping, SHA1 not changed"
         return
