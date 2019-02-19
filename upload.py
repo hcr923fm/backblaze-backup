@@ -94,7 +94,7 @@ def get_sha1_of_existing_file(file_path):
         return resp_data["contentSha1"]
 
     else:
-        print "Couldn't find DB entry for", file_path
+        #print "Couldn't find DB entry for", file_path
         return None
 
 
@@ -120,7 +120,7 @@ def do_upload_file(file_abs_location, b2_bucket_id):
     #     b2_opts['b2_upload_url'])
     # print headers
 
-    print "--> Hashing", file_abs_location
+    #print "--> Hashing", file_abs_location
 #        sha1_base = hashlib.sha1(file_data)
 #        sha1_of_file_data = sha1_base.hexdigest()
     sha1sum = hashlib.sha1()
@@ -133,10 +133,10 @@ def do_upload_file(file_abs_location, b2_bucket_id):
     sha1_of_file_data = sha1sum.hexdigest()
     existing_hash = get_sha1_of_existing_file(file_abs_location)
     if sha1_of_file_data == existing_hash:
-        print "Skipping, SHA1 not changed"
+        #    print "Skipping, SHA1 not changed"
         return
-    print "SHA1 mismatch, continuing upload (archived: {0}, computed: {1})".format(
-        existing_hash, sha1_of_file_data)
+    # print "SHA1 mismatch, continuing upload (archived: {0}, computed: {1})".format(
+    #    existing_hash, sha1_of_file_data)
 
     # We'll commit this later, when the file has been confirmed uploaded
     cursor.execute("""DELETE FROM files WHERE path=?""", [file_abs_location])
