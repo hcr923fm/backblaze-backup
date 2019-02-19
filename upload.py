@@ -156,6 +156,10 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         cursor.execute("""INSERT INTO files VALUES (?, ?)""",
                        (file_abs_location, resp_data["fileId"]))
         db_conn.commit()
+    except urllib2.URLError, e:
+        print e
+        print e.reason
+        db_conn.rollback()
     except urllib2.HTTPError, e:
         print e
         print e.reason
