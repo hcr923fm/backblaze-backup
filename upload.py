@@ -7,6 +7,7 @@ import os.path
 import sys
 import codecs
 import sqlite3
+from tqdm import tqdm
 
 db_conn = sqlite3.connect("bb_bkp.db")
 cursor = db_conn.cursor()
@@ -181,6 +182,7 @@ def generate_file_list(base_directory):
 
 
 file_list = generate_file_list(b2_opts['local_base_directory'])
-while file_list:
-    file_name = file_list.pop()
-    do_upload_file(file_name, b2_opts['b2_bucket_id'])
+pbar = tqdm(file_list, unit="files", dynamic_ncols=True)
+for fpath in pbar:
+    pbar.set_description("Processing %s" % fpath)
+    do_upload_file(fpath, b2_opts['b2_bucket_id'])
