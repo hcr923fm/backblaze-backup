@@ -159,6 +159,8 @@ def do_upload_file(file_abs_location, b2_bucket_id):
     except urllib2.HTTPError, e:
         print e
         print e.reason
+        if e.code == 401:
+            setAccountAuth(getAccountAuth)
         # Don't update the new file in the DB
         db_conn.rollback()
         # print resp_data
