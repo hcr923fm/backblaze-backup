@@ -160,7 +160,7 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         print e
         print e.reason
         if e.code == 401:
-            setAccountAuth(getAccountAuth)
+            setAccountAuth(getAccountAuth(b2_opts['b2_key_id'], b2_opts['b2_app_key']))
         # Don't update the new file in the DB
         db_conn.rollback()
         # print resp_data
