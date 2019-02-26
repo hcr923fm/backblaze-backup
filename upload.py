@@ -160,9 +160,16 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         print e
         print e.reason
         if e.code == 401:
-            setAccountAuth(getAccountAuth(b2_opts['b2_key_id'], b2_opts['b2_app_key']))
+            setAccountAuth(getAccountAuth(
+                b2_opts['b2_key_id'], b2_opts['b2_app_key']))
+
+            # Clear the upload auth token, do_upload_file will check and request a new one
+            b2_opts['b2_upload_auth_token'] = ""
         # Don't update the new file in the DB
         db_conn.rollback()
+
+        # And try again
+        do_upload_file(file_abs_location, b2_bucket_id)
         # print resp_data
     except urllib2.URLError, e:
         print e
