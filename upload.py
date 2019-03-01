@@ -116,13 +116,6 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         'Content-Type': 'b2/x-auto',
     }
 
-    # print "Upload url:", b2_opts['b2_upload_url'], type(
-    #     b2_opts['b2_upload_url'])
-    # print headers
-
-    #print "--> Hashing", file_abs_location
-#        sha1_base = hashlib.sha1(file_data)
-#        sha1_of_file_data = sha1_base.hexdigest()
     sha1sum = hashlib.sha1()
     with open(file_abs_location, 'rb') as source:
         block = source.read(2**16)
@@ -133,10 +126,10 @@ def do_upload_file(file_abs_location, b2_bucket_id):
     sha1_of_file_data = sha1sum.hexdigest()
     existing_hash = get_sha1_of_existing_file(file_abs_location)
     if sha1_of_file_data == existing_hash:
-        #    print "Skipping, SHA1 not changed"
+        # Hash not changed, don't upload the file
         return
-    # print "SHA1 mismatch, continuing upload (archived: {0}, computed: {1})".format(
-    #    existing_hash, sha1_of_file_data)
+
+    # If we got this far, the file has changed, so upload it
 
     # We'll commit this later, when the file has been confirmed uploaded
     cursor.execute("""DELETE FROM files WHERE path=?""", [file_abs_location])
@@ -145,7 +138,6 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         file_data = f.read()
 
         headers['X-Bz-Content-Sha1'] = sha1_of_file_data
-
         request = urllib2.Request(b2_opts['b2_upload_url'], file_data, headers)
 
     try:
@@ -159,22 +151,23 @@ def do_upload_file(file_abs_location, b2_bucket_id):
     except urllib2.HTTPError, e:
         print e
         print e.reason
-        if e.code == 401:
+        if e.code == 401:  # Get new credentials, these have probably timed out
             setAccountAuth(getAccountAuth(
                 b2_opts['b2_key_id'], b2_opts['b2_app_key']))
 
             # Clear the upload auth token, do_upload_file will check and request a new one
             b2_opts['b2_upload_auth_token'] = ""
-        # Don't update the new file in the DB
-        db_conn.rollback()
 
-        # And try again
+        # Don't commit the changes, try again
+        db_conn.rollback()
         do_upload_file(file_abs_location, b2_bucket_id)
-        # print resp_data
     except urllib2.URLError, e:
         print e
         print e.reason
-        db_conn.rollback()
+        if e.errno == 110:  # Connection timed out
+            # Don't commit the changes, try again
+            db_conn.rollback()
+            do_upload_file(file_abs_location, b2_bucket_id)
 
 
 def generate_file_list(base_directory):
