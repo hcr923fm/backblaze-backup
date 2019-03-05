@@ -8,11 +8,13 @@ import sys
 import codecs
 import sqlite3
 from tqdm import tqdm
+import time
 
 db_conn = sqlite3.connect("bb_bkp.db")
 cursor = db_conn.cursor()
 try:
-    cursor.execute("""CREATE TABLE files (path text, id text)""")
+    cursor.execute(
+        """CREATE TABLE files (path text, id text, upload_time integer)""")
 except sqlite3.OperationalError:
     print "Table already exists"
 
@@ -98,6 +100,27 @@ def get_sha1_of_existing_file(file_path):
         return None
 
 
+def get_mtime_of_existing_file(file_path):
+    cursor.execute("""SELECT * FROM files WHERE path=?""", [file_path])
+    file_info = cursor.fetchone()
+    if file_info:
+        return file_info[2]
+    else:
+        return 0
+
+
+def calculate_file_hash(file_location):
+    sha1sum = hashlib.sha1()
+    with open(file_location, 'rb') as source:
+        block = source.read(2**16)
+        while len(block) != 0:
+            sha1sum.update(block)
+            block = source.read(2**16)
+
+    sha1_of_file_data = sha1sum.hexdigest()
+    return sha1_of_file_data
+
+
 def do_upload_file(file_abs_location, b2_bucket_id):
     if not b2_opts['b2_auth_token']:
         account_auth_data = getAccountAuth(
@@ -116,14 +139,12 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         'Content-Type': 'b2/x-auto',
     }
 
-    sha1sum = hashlib.sha1()
-    with open(file_abs_location, 'rb') as source:
-        block = source.read(2**16)
-        while len(block) != 0:
-            sha1sum.update(block)
-            block = source.read(2**16)
+    date_file_modified = os.path.getmtime(file_abs_location)
+    if date_file_modified <= get_mtime_of_existing_file(file_abs_location):
+        # File hasn't been modified since we uploaded it
+        return
 
-    sha1_of_file_data = sha1sum.hexdigest()
+    sha1_of_file_data = calculate_file_hash(file_abs_location)
     existing_hash = get_sha1_of_existing_file(file_abs_location)
     if sha1_of_file_data == existing_hash:
         # Hash not changed, don't upload the file
@@ -145,8 +166,8 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         resp_data = json.loads(urllib2.unquote(
             str(resp.read())).decode('utf-8'))
         # We'll commit this later, when the file has been confirmed uploaded
-        cursor.execute("""INSERT INTO files VALUES (?, ?)""",
-                       (file_abs_location, resp_data["fileId"]))
+        cursor.execute("""INSERT INTO files VALUES (?, ?, ?)""",
+                       (file_abs_location, resp_data["fileId"], int(time.time())))
         db_conn.commit()
     except urllib2.HTTPError, e:
         print e
