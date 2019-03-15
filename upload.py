@@ -201,7 +201,7 @@ def generate_file_list(base_directory):
             entry = os.path.join(current_dir, dir_contents.pop())
             if os.path.isdir(entry):
                 directories_to_traverse.append(entry)
-            elif os.path.isfile(entry) and not entry.lower().count(".bak") and not entry.lower().count("Backup"):
+            elif os.path.isfile(entry) and not entry.lower().count(".bak") and not entry.lower().count("backup"):
                 file_list.append(entry)
 #                print "Found file:", entry
 
