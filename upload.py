@@ -96,6 +96,7 @@ def get_sha1_of_existing_file(file_path):
             resp.close()
             return resp_data["contentSha1"]
         except:
+            print "Failed to get SHA for %s" % file_path
             return None
     else:
         #print "Couldn't find DB entry for", file_path
