@@ -211,6 +211,7 @@ def is_newer(file_path):
         return True
 
 
+print "=== Starting %s ===" % time.asctime()
 file_list = generate_file_list(b2_opts['local_base_directory'])
 print "Found %s files" % len(file_list)
 
