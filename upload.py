@@ -139,11 +139,6 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         'Content-Type': 'b2/x-auto',
     }
 
-    date_file_modified = os.path.getmtime(file_abs_location)
-    if date_file_modified <= get_mtime_of_existing_file(file_abs_location):
-        # File hasn't been modified since we uploaded it
-        return
-
     sha1_of_file_data = calculate_file_hash(file_abs_location)
     existing_hash = get_sha1_of_existing_file(file_abs_location)
     if sha1_of_file_data == existing_hash:
@@ -208,8 +203,23 @@ def generate_file_list(base_directory):
     return file_list
 
 
+def is_newer(file_path):
+    date_file_modified = os.path.getmtime(file_path)
+    if date_file_modified <= get_mtime_of_existing_file(file_path):
+        return False
+    else:
+        return True
+
+
 file_list = generate_file_list(b2_opts['local_base_directory'])
-pbar = tqdm(file_list, unit="file", dynamic_ncols=True)
+print "Found %s files" % len(file_list)
+
+modified_files = filter(is_newer, file_list)
+print "Dropped %s files as they have not been modified; uploading %s" % (
+    len(file_list)-len(modified_files), len(modified_files))
+del file_list
+
+pbar = tqdm(modified_files, unit="file", dynamic_ncols=True)
 for fpath in pbar:
     pbar.set_description("Processing %s" % fpath)
     do_upload_file(fpath, b2_opts['b2_bucket_id'])
