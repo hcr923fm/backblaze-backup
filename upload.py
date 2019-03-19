@@ -71,14 +71,15 @@ def get_b2_upload_url(bucket_id):
     return data
 
 
-def get_sha1_of_existing_file(file_path):
+def get_sha1_of_existing_file(abs_file_path):
     if not b2_opts['b2_auth_token']:
         account_auth_data = getAccountAuth(
             b2_opts['b2_key_id'], b2_opts['b2_app_key'])
         setAccountAuth(account_auth_data)
 
     #print "Search in DB for", file_path
-    cursor.execute("""SELECT * FROM files WHERE path=?""", [file_path])
+    rel_path = os.path.relpath(abs_file_path,b2_opts['local_base_directory'])
+    cursor.execute("""SELECT * FROM files WHERE path=?""", [rel_path])
     file_info = cursor.fetchone()
     if file_info:
         headers = {
@@ -103,8 +104,9 @@ def get_sha1_of_existing_file(file_path):
         return None
 
 
-def get_mtime_of_existing_file(file_path):
-    cursor.execute("""SELECT * FROM files WHERE path=?""", [file_path])
+def get_mtime_of_existing_file(abs_file_path):
+    rel_path = os.path.relpath(abs_file_path,b2_opts['local_base_directory'])
+    cursor.execute("""SELECT * FROM files WHERE path=?""", [rel_path])
     file_info = cursor.fetchone()
     if file_info:
         return file_info[2]
@@ -112,9 +114,9 @@ def get_mtime_of_existing_file(file_path):
         return 0
 
 
-def calculate_file_hash(file_location):
+def calculate_file_hash(abs_file_location):
     sha1sum = hashlib.sha1()
-    with open(file_location, 'rb') as source:
+    with open(abs_file_location, 'rb') as source:
         block = source.read(2**16)
         while len(block) != 0:
             sha1sum.update(block)
@@ -151,7 +153,8 @@ def do_upload_file(file_abs_location, b2_bucket_id):
     # If we got this far, the file has changed, so upload it
 
     # We'll commit this later, when the file has been confirmed uploaded
-    cursor.execute("""DELETE FROM files WHERE path=?""", [file_abs_location])
+    rel_path = os.path.relpath(file_abs_location,b2_opts['local_base_directory'])
+    cursor.execute("""DELETE FROM files WHERE path=?""", [rel_path])
 
     with open(file_abs_location) as f:
         file_data = f.read()
@@ -165,7 +168,7 @@ def do_upload_file(file_abs_location, b2_bucket_id):
             str(resp.read())).decode('utf-8'))
         # We'll commit this later, when the file has been confirmed uploaded
         cursor.execute("""INSERT INTO files VALUES (?, ?, ?)""",
-                       (file_abs_location, resp_data["fileId"], int(time.time())))
+                       (rel_path, resp_data["fileId"], int(time.time())))
         db_conn.commit()
     except urllib2.HTTPError, e:
         print e
