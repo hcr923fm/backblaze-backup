@@ -90,11 +90,13 @@ def get_sha1_of_existing_file(file_path):
             json.dumps({'fileId': file_info[1]}),
             headers)
 
-        resp = urllib2.urlopen(request)
-        resp_data = json.loads(resp.read())
-        resp.close()
-        return resp_data["contentSha1"]
-
+        try:
+            resp = urllib2.urlopen(request)
+            resp_data = json.loads(resp.read())
+            resp.close()
+            return resp_data["contentSha1"]
+        except:
+            return None
     else:
         #print "Couldn't find DB entry for", file_path
         return None
