@@ -9,9 +9,16 @@ import codecs
 import sqlite3
 from tqdm import tqdm
 import time
+import signal
+import tempfile
+import shutil
 
 db_conn = sqlite3.connect("bb_bkp.db")
 cursor = db_conn.cursor()
+
+temp_dir = tempfile.mkdtemp("_backblaze")
+# signal.signal(signal.SIGINT)
+
 try:
     cursor.execute(
         """CREATE TABLE files (path text, id text, upload_time integer)""")
@@ -78,7 +85,7 @@ def get_sha1_of_existing_file(abs_file_path):
         setAccountAuth(account_auth_data)
 
     #print "Search in DB for", file_path
-    rel_path = os.path.relpath(abs_file_path,b2_opts['local_base_directory'])
+    rel_path = os.path.relpath(abs_file_path, b2_opts['local_base_directory'])
     cursor.execute("""SELECT * FROM files WHERE path=?""", [rel_path])
     file_info = cursor.fetchone()
     if file_info:
@@ -105,7 +112,7 @@ def get_sha1_of_existing_file(abs_file_path):
 
 
 def get_mtime_of_existing_file(abs_file_path):
-    rel_path = os.path.relpath(abs_file_path,b2_opts['local_base_directory'])
+    rel_path = os.path.relpath(abs_file_path, b2_opts['local_base_directory'])
     cursor.execute("""SELECT * FROM files WHERE path=?""", [rel_path])
     file_info = cursor.fetchone()
     if file_info:
@@ -144,7 +151,12 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         'Content-Type': 'b2/x-auto',
     }
 
-    sha1_of_file_data = calculate_file_hash(file_abs_location)
+    rel_path = os.path.relpath(
+        file_abs_location, b2_opts['local_base_directory'])
+    temp_file_abs_path = os.path.join(temp_dir, rel_path)
+    shutil.copy2(file_abs_location, temp_file_abs_path)
+
+    sha1_of_file_data = calculate_file_hash(temp_file_abs_path)
     existing_hash = get_sha1_of_existing_file(file_abs_location)
     if sha1_of_file_data == existing_hash:
         # Hash not changed, don't upload the file
@@ -153,10 +165,10 @@ def do_upload_file(file_abs_location, b2_bucket_id):
     # If we got this far, the file has changed, so upload it
 
     # We'll commit this later, when the file has been confirmed uploaded
-    rel_path = os.path.relpath(file_abs_location,b2_opts['local_base_directory'])
+
     cursor.execute("""DELETE FROM files WHERE path=?""", [rel_path])
 
-    with open(file_abs_location) as f:
+    with open(temp_file_abs_path) as f:
         file_data = f.read()
 
         headers['X-Bz-Content-Sha1'] = sha1_of_file_data
@@ -170,6 +182,7 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         cursor.execute("""INSERT INTO files VALUES (?, ?, ?)""",
                        (rel_path, resp_data["fileId"], int(time.time())))
         db_conn.commit()
+        os.unlink(temp_file_abs_path)
     except urllib2.HTTPError, e:
         print e
         print e.reason
@@ -230,3 +243,5 @@ pbar = tqdm(modified_files, unit="file", dynamic_ncols=True)
 for fpath in pbar:
     pbar.set_description("Processing %s" % fpath)
     do_upload_file(fpath, b2_opts['b2_bucket_id'])
+
+os.rmdir(temp_dir)
