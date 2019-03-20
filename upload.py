@@ -153,7 +153,8 @@ def do_upload_file(file_abs_location, b2_bucket_id):
 
     rel_path = os.path.relpath(
         file_abs_location, b2_opts['local_base_directory'])
-    temp_file_abs_path = os.path.join(temp_dir, rel_path)
+    temp_file_abs_path = os.path.join(
+        temp_dir, os.path.basename(file_abs_location))
     shutil.copy2(file_abs_location, temp_file_abs_path)
 
     sha1_of_file_data = calculate_file_hash(temp_file_abs_path)
