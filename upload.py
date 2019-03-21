@@ -13,7 +13,7 @@ import signal
 import tempfile
 import shutil
 
-db_conn = sqlite3.connect("bb_bkp.db")
+db_conn = sqlite3.connect("/home/hcrbackup/bb_bkp.db")
 cursor = db_conn.cursor()
 
 temp_dir = tempfile.mkdtemp("_backblaze")
@@ -104,7 +104,7 @@ def get_sha1_of_existing_file(abs_file_path):
             resp.close()
             return resp_data["contentSha1"]
         except:
-            print "Failed to get SHA for %s" % abs_file_path
+            #print "Failed to get SHA for %s" % abs_file_path
             return None
     else:
         #print "Couldn't find DB entry for", file_path
