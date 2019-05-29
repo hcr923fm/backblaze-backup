@@ -204,6 +204,11 @@ def do_upload_file(file_abs_location, b2_bucket_id):
             # Don't commit the changes, try again
             db_conn.rollback()
             do_upload_file(file_abs_location, b2_bucket_id)
+    except OverflowError, e:
+        print "Overflow error for file", rel_path, "- file too large, not uploading"
+        db_conn.rollback()
+    except Exception, e:
+        print e
 
 
 def generate_file_list(base_directory):
