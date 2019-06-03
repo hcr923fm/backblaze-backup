@@ -209,6 +209,8 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         db_conn.rollback()
     except Exception, e:
         print e
+    finally:
+        os.unlink(temp_file_abs_path)
 
 
 def generate_file_list(base_directory):
