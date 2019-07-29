@@ -233,7 +233,7 @@ def generate_file_list(base_directory):
 
 def is_disk_file_newer(file_path):
     date_file_modified = os.path.getmtime(file_path)
-    return fetch_stored_mtime(file_path) >= date_file_modified
+    return fetch_stored_mtime(file_path) <= date_file_modified
 
 
 print "=== Starting %s ===" % time.asctime()
