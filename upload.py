@@ -183,7 +183,7 @@ def do_upload_file(file_abs_location, b2_bucket_id):
         cursor.execute("""INSERT INTO files VALUES (?, ?, ?)""",
                        (rel_path, resp_data["fileId"], int(time.time())))
         db_conn.commit()
-        os.unlink(temp_file_abs_path)
+        # os.unlink(temp_file_abs_path)
     except urllib2.HTTPError, e:
         print e
         print e.reason
@@ -210,7 +210,8 @@ def do_upload_file(file_abs_location, b2_bucket_id):
     except Exception, e:
         print e
     finally:
-        os.unlink(temp_file_abs_path)
+        if os.path.exists(temp_file_abs_path):
+            os.unlink(temp_file_abs_path)
 
 
 def generate_file_list(base_directory):
@@ -232,10 +233,7 @@ def generate_file_list(base_directory):
 
 def is_newer(file_path):
     date_file_modified = os.path.getmtime(file_path)
-    if date_file_modified <= get_mtime_of_existing_file(file_path):
-        return False
-    else:
-        return True
+    return get_mtime_of_existing_file(file_path) > date_file_modified
 
 
 print "=== Starting %s ===" % time.asctime()
