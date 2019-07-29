@@ -111,7 +111,7 @@ def get_sha1_of_existing_file(abs_file_path):
         return None
 
 
-def get_mtime_of_existing_file(abs_file_path):
+def fetch_stored_mtime(abs_file_path):
     rel_path = os.path.relpath(abs_file_path, b2_opts['local_base_directory'])
     cursor.execute("""SELECT * FROM files WHERE path=?""", [rel_path])
     file_info = cursor.fetchone()
@@ -231,16 +231,16 @@ def generate_file_list(base_directory):
     return file_list
 
 
-def is_newer(file_path):
+def is_disk_file_newer(file_path):
     date_file_modified = os.path.getmtime(file_path)
-    return get_mtime_of_existing_file(file_path) > date_file_modified
+    return fetch_stored_mtime(file_path) >= date_file_modified
 
 
 print "=== Starting %s ===" % time.asctime()
 file_list = generate_file_list(b2_opts['local_base_directory'])
 print "Found %s files" % len(file_list)
 
-modified_files = filter(is_newer, file_list)
+modified_files = filter(is_disk_file_newer, file_list)
 print "Dropped %s files as they have not been modified; uploading %s" % (
     len(file_list)-len(modified_files), len(modified_files))
 del file_list
