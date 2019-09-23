@@ -161,6 +161,7 @@ def do_upload_file(file_abs_location, b2_bucket_id):
     existing_hash = get_sha1_of_existing_file(file_abs_location)
     if sha1_of_file_data == existing_hash:
         # Hash not changed, don't upload the file
+        os.unlink(temp_file_abs_path)
         return
 
     # If we got this far, the file has changed, so upload it
